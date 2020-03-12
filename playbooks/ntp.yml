@@ -1,0 +1,48 @@
+--- 
+- hosts: localhost
+  gather_facts: no
+  become: no
+
+  vars:
+    ntp_servers:
+      - ntp.lab.ltsai.com
+      - pool.ntp.org
+
+  tasks:
+    - set_fact:
+        ntp_conf: "{{ lookup('template', './chrony.conf.j2') }}"
+        
+    - name: Create Chrony Machine Config 
+      k8s:
+        state: present
+        definition:
+          apiVersion: machineconfiguration.openshift.io/v1
+          kind: MachineConfig
+
+          metadata:
+            labels:
+              machineconfiguration.openshift.io/role: "{{item}}"
+            name: masters-chrony-configuration
+
+          spec:
+            config:
+              ignition:
+                config: 
+                security:
+                  tls: 
+                timeouts: 
+                version: 2.2.0
+              networkd: 
+              passwd: 
+              storage:
+                files:
+                - contents:
+                    source: "data:text/plain;charset=utf-8;base64,{{ntp_conf | b64encode }}"
+                    verification: 
+                  filesystem: root
+                  mode: 420
+                  path: /etc/chrony.conf
+            osImageURL: ""
+      loop:
+        - master
+        - worker
