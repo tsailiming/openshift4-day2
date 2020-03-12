@@ -1,0 +1,68 @@
+--- 
+- hosts: localhost
+  gather_facts: no
+  become: no
+
+  vars:
+    nfs_path: /exports/ocp-registry
+    nfs_server: b08.lab.ltsai.com
+    storage_capacity: 5Gi
+
+  tasks:
+    - name: Create NFS PV
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: PersistentVolume
+
+          metadata:
+            name: image-registry-pv
+            
+          spec:            
+            capacity:
+              storage: "{{storage_capacity}}"
+            volumeMode: Filesystem
+            accessModes:
+              - ReadWriteMany
+            persistentVolumeReclaimPolicy: Retain
+            storageClassName: ''
+            nfs:
+              path: "{{nfs_path}}"
+              server: "{{nfs_server}}"
+
+    - name: Create NFS PVC
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: PersistentVolumeClaim
+
+          metadata:
+            name: image-registry-storage # Default name
+            namespace: openshift-image-registry
+            
+          spec:            
+            accessModes:
+              - ReadWriteMany
+            resources:
+              requests:
+                storage: "{{storage_capacity}}"
+            storageClassName: ''
+            volumeMode: Filesystem
+
+    - name: Patch image-registry operator CR for storage spec
+      k8s:
+        state: present
+        merge_type: merge
+        definition:
+            apiVersion: imageregistry.operator.openshift.io/v1
+            kind: Config
+            
+            metadata:
+              name: cluster
+            
+            spec:
+              storage:
+                pvc:
+                  claim:
