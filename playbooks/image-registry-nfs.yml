@@ -63,6 +63,8 @@
               name: cluster
             
             spec:
+              managementState: Managed
+              
               storage:
                 pvc:
                   claim:
