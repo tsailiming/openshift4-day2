@@ -4,7 +4,7 @@
   become: no
 
   vars:
-    nfs_path: /exports/ocp-registry
+    nfs_path: /exports/ocp-pv/registry
     nfs_server: b08.lab.ltsai.com
     storage_capacity: 5Gi
 
@@ -64,7 +64,7 @@
             
             spec:
               managementState: Managed
-              
+ 
               storage:
                 pvc:
                   claim:
