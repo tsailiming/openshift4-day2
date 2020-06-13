@@ -1,0 +1,12 @@
+- name: Set up Dynamic NFS Provisioning
+  hosts: localhost
+  run_once: true
+  gather_facts: False
+  tasks:
+  - name: Set up Dynamic NFS Provisioning
+    include_role:
+      name: "ocp-dynamic-nfs-provisioner"
+    vars:
+      nfs_provisioner_nfs_server_hostname: "b08.lab.ltsai.com"
+      nfs_provisioner_storage_class_is_default: True
+      nfs_provisioner_server_directory: /exports/ocp-pv
